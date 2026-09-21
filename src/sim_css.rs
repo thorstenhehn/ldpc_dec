@@ -1,5 +1,5 @@
 use crate::channel::QuantumBscChannel;
-use crate::css::{css_3qubit, css_steane_code, CssCode, CssGraphs};
+use crate::css::{CssCode, CssGraphs, css_3qubit, css_steane_code};
 use crate::decoder::Decoder;
 use crate::graph::Graph;
 use crate::hgp::hgp_from_random;

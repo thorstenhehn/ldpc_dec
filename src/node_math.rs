@@ -70,11 +70,7 @@ pub fn normalized_mult(f0: &[f32]) -> f32 {
     let num = prod_f0;
     let den = prod_f0 + prod_f1;
 
-    if den == 0.0 {
-        0.5
-    } else {
-        num / den
-    }
+    if den == 0.0 { 0.5 } else { num / den }
 }
 
 pub fn hard_decision(p0: &[f32]) -> Vec<u8> {
