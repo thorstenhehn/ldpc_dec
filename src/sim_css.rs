@@ -20,7 +20,6 @@ pub fn run() {
     let n_seed: usize = 100;
     let (hx, hz) = hgp_from_random(n_seed, 3, 6);
     let n: usize = hx.cols();
-    let m: usize = hx.rows();
 
     let css = CssCode::new(hx, hz).expect("CSS validity check failed.");
     let graphs = CssGraphs::new(&css);

@@ -79,5 +79,5 @@ pub fn hard_decision(p0: &[f32]) -> Vec<u8> {
 
 fn _gallager_prod(f0: &[f32]) -> f32 {
     let p0: f32 = f0.iter().map(|&f0| 2.0 * f0 - 1.0).product();
-    return 0.5 * p0 + 0.5;
+    0.5 * p0 + 0.5
 }

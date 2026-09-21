@@ -166,7 +166,7 @@ impl<'a, M: Mode> Decoder<'a, M> {
 
             result.push(normalized_mult(&incoming));
         }
-        return result;
+        result
     }
 
     pub fn satisfies_syndrome(&self, vn_quant: &[u8], syn: &[u8]) -> bool {
