@@ -6,7 +6,7 @@ on:
 
 jobs:
   fmt:
-    name: Check formatting
+    name: Check formatting and build
     runs-on: ubuntu-latest
 
     steps:
