@@ -2,8 +2,9 @@ use std::fmt;
 
 use std::cmp::max;
 
-use crate::node_math::{gallager_prod_exc_one, normalized_mult_exc_one,
-                       normalized_mult, hard_decision};
+use crate::node_math::{
+    gallager_prod_exc_one, hard_decision, normalized_mult, normalized_mult_exc_one,
+};
 
 use crate::channel::Channel;
 use crate::graph::Graph;
@@ -12,18 +13,18 @@ use crate::mode::Mode;
 
 pub struct Decoder<'a, M: Mode> {
     pub info_pos: Vec<i32>,
-    pub iter:     u32,
-    pub graph:    &'a Graph<M>,
-    pub state:    DecoderState,
-    pub scratch:  DecoderScratch,
-    pub result:   DecoderResult,
+    pub iter: u32,
+    pub graph: &'a Graph<M>,
+    pub state: DecoderState,
+    pub scratch: DecoderScratch,
+    pub result: DecoderResult,
 }
 
 pub struct DecoderState {
-    pub p0_aprio:     Vec<f32>,
-    pub syndrome:     Vec<u8>,
+    pub p0_aprio: Vec<f32>,
+    pub syndrome: Vec<u8>,
     pub msg_cn_to_vn: Vec<f32>,
-    pub msg_vn_to_cn: Vec<f32>
+    pub msg_vn_to_cn: Vec<f32>,
 }
 
 pub struct DecoderScratch {
@@ -31,26 +32,25 @@ pub struct DecoderScratch {
     pub prefix_f1: Vec<f32>,
     pub suffix_f0: Vec<f32>,
     pub suffix_f1: Vec<f32>,
-    pub result:    Vec<f32>
+    pub result: Vec<f32>,
 }
 
 pub struct DecoderResult {
     pub estimate: Vec<u8>,
     pub iterations: u32,
-    pub success: bool
+    pub success: bool,
 }
 
-impl <'a, M: Mode> Decoder <'a, M> {
+impl<'a, M: Mode> Decoder<'a, M> {
     // Constructor
     pub fn new(graph: &'a Graph<M>, info_positions: Vec<i32>) -> Self {
-
         let info_pos = info_positions;
         // Set default for iter, the maximum number of iterations
         let iter = 100;
 
-        let state   = DecoderState::new(&graph);
+        let state = DecoderState::new(&graph);
         let scratch = DecoderScratch::new(&graph);
-        let result  = DecoderResult::new(&graph);
+        let result = DecoderResult::new(&graph);
 
         Self {
             info_pos,
@@ -58,12 +58,15 @@ impl <'a, M: Mode> Decoder <'a, M> {
             graph,
             state,
             scratch,
-            result
+            result,
         }
     }
 
-    pub fn apply_channel<C: Channel<M>>(&mut self, channel: &C, tx: &[C::Tx])
-                                        -> Result<(), String> {
+    pub fn apply_channel<C: Channel<M>>(
+        &mut self,
+        channel: &C,
+        tx: &[C::Tx],
+    ) -> Result<(), String> {
         self.state.reset_msg();
         channel.apply(tx, &mut self.state)
     }
@@ -75,9 +78,9 @@ impl <'a, M: Mode> Decoder <'a, M> {
             let vn_apost = self.vn_aposteriori();
             let vn_quant = hard_decision(&vn_apost);
             if self.satisfies_syndrome(&vn_quant, &self.state.syndrome) {
-                self.result.estimate   = vn_quant;
+                self.result.estimate = vn_quant;
                 self.result.iterations = i;
-                self.result.success    = true;
+                self.result.success = true;
                 return;
             }
             // Perform half iterations and increase iteration counter
@@ -90,9 +93,9 @@ impl <'a, M: Mode> Decoder <'a, M> {
         let vn_apost = self.vn_aposteriori();
         let vn_quant = hard_decision(&vn_apost);
 
-        self.result.estimate   = vn_quant;
+        self.result.estimate = vn_quant;
         self.result.iterations = self.iter;
-        self.result.success    = false;
+        self.result.success = false;
     }
 
     pub fn vn_update(&mut self) {
@@ -109,10 +112,11 @@ impl <'a, M: Mode> Decoder <'a, M> {
             let suffix_f0 = &mut self.scratch.suffix_f0[..deg];
             let prefix_f1 = &mut self.scratch.prefix_f1[..deg];
             let suffix_f1 = &mut self.scratch.suffix_f1[..deg];
-            let result    = &mut self.scratch.result[..deg];
+            let result = &mut self.scratch.result[..deg];
 
-            normalized_mult_exc_one(&incoming, prefix_f0, suffix_f0,
-                                    prefix_f1, suffix_f1, result);
+            normalized_mult_exc_one(
+                &incoming, prefix_f0, suffix_f0, prefix_f1, suffix_f1, result,
+            );
             // Multiply a-prio info from channel ONCE per outgoing edge
             let mut pair = [0.0f32; 2];
             pair[1] = self.state.p0_aprio[vn];
@@ -138,7 +142,7 @@ impl <'a, M: Mode> Decoder <'a, M> {
             let deg = incoming.len();
             let prefix_f0 = &mut self.scratch.prefix_f0[..deg];
             let suffix_f0 = &mut self.scratch.suffix_f0[..deg];
-            let result    = &mut self.scratch.result[..deg];
+            let result = &mut self.scratch.result[..deg];
 
             gallager_prod_exc_one(&incoming, prefix_f0, suffix_f0, result);
 
@@ -173,7 +177,7 @@ impl <'a, M: Mode> Decoder <'a, M> {
                 let vn = self.graph.edge_to_vn[*e];
                 parity ^= vn_quant[vn];
             }
-            if parity !=  syn[j] {
+            if parity != syn[j] {
                 return false;
             }
         }
@@ -181,7 +185,7 @@ impl <'a, M: Mode> Decoder <'a, M> {
     }
 
     pub fn info(&self) {
-        let syst_enc: bool; 
+        let syst_enc: bool;
 
         if let Some(_max_info) = self.info_pos.iter().max() {
             syst_enc = true;
@@ -189,22 +193,28 @@ impl <'a, M: Mode> Decoder <'a, M> {
             syst_enc = false;
         }
 
-        println!("\nInformation:\n\
-                  Decoder mode: {}\n\
-                  Max iterations: {}\n\
-                  Parity-check matrix properties: n: {}, m: {},\n\
-                  max dc (data): {}, max dc (total) {}, \
-                  max dv: {}",
-                 M::name(),
-                 self.iter,
-                 self.graph.n_data, self.graph.m,
-                 self.graph.cn_max_deg_data, self.graph.cn_max_deg_total,
-                 self.graph.vn_max_deg);
+        println!(
+            "\nInformation:\n\
+             Decoder mode: {}\n\
+             Max iterations: {}\n\
+             Parity-check matrix properties: n: {}, m: {},\n\
+             max dc (data): {}, max dc (total) {}, \
+             max dv: {}",
+            M::name(),
+            self.iter,
+            self.graph.n_data,
+            self.graph.m,
+            self.graph.cn_max_deg_data,
+            self.graph.cn_max_deg_total,
+            self.graph.vn_max_deg
+        );
         if !syst_enc {
             println!("Encoding: Non-systematic.\n");
         } else {
-            println!("Encoding: Systematic, information positions: {:?}\n",
-                     self.info_pos);
+            println!(
+                "Encoding: Systematic, information positions: {:?}\n",
+                self.info_pos
+            );
         }
     }
 }
@@ -212,8 +222,8 @@ impl <'a, M: Mode> Decoder <'a, M> {
 impl DecoderState {
     // Constructor
     pub fn new<M: Mode>(graph: &Graph<M>) -> Self {
-        let p0_aprio     = vec![0.0; graph.n_total];
-        let syndrome     = vec![0;   graph.m];
+        let p0_aprio = vec![0.0; graph.n_total];
+        let syndrome = vec![0; graph.m];
         let msg_cn_to_vn = vec![0.5; graph.n_edges]; // 0.5: first half-iter
         let msg_vn_to_cn = vec![0.0; graph.n_edges];
 
@@ -229,7 +239,7 @@ impl DecoderState {
         self.msg_cn_to_vn.fill(0.5); // Init 0.5 for first half-iter
         self.msg_vn_to_cn.fill(0.0);
         // Note: filling of msg_vn_to_cn could be skipped for performance,
-        // as iteration order is "vn_update first". We leave it in for clarity. 
+        // as iteration order is "vn_update first". We leave it in for clarity.
     }
 }
 
@@ -243,14 +253,14 @@ impl DecoderScratch {
         let prefix_f1 = vec![1.0; max_deg];
         let suffix_f0 = vec![1.0; max_deg];
         let suffix_f1 = vec![1.0; max_deg];
-        let result    = vec![0.0; max_deg];
+        let result = vec![0.0; max_deg];
 
         Self {
             prefix_f0,
             prefix_f1,
             suffix_f0,
             suffix_f1,
-            result
+            result,
         }
     }
 }
@@ -259,14 +269,14 @@ impl DecoderResult {
     // Constructor
     pub fn new<M: Mode>(graph: &Graph<M>) -> Self {
         // Result of the decoding process
-        let estimate   = vec![0; graph.n_total];
+        let estimate = vec![0; graph.n_total];
         let iterations = 0;
-        let success    = false;
+        let success = false;
 
         Self {
             estimate,
             iterations,
-            success
+            success,
         }
     }
 }

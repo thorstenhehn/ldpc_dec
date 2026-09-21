@@ -1,9 +1,9 @@
-use crate::mode::{Quantum};
-use crate::graph::Graph;
-use crate::channel::{QuantumBscChannel};
-use crate::css::{CssCode, CssGraphs, css_3qubit, css_steane_code};
-use crate::hgp::{hgp_from_random};
+use crate::channel::QuantumBscChannel;
+use crate::css::{css_3qubit, css_steane_code, CssCode, CssGraphs};
 use crate::decoder::Decoder;
+use crate::graph::Graph;
+use crate::hgp::hgp_from_random;
+use crate::mode::Quantum;
 
 pub fn run() {
     // CSS decoding: test with CSS-BSC channel
@@ -13,17 +13,16 @@ pub fn run() {
     // p_z_syn_flip: Syndrome measurement error (on measuring z errors)
 
     let runs = 100;
-//    let n:usize  = 7;
-//    let (hx, hz) = css_steane_code();
+    // let n:usize  = 7;
+    // let (hx, hz) = css_steane_code();
 
     // Create a hypergraph product code from a random code as seed
-    let n_seed:usize = 100;
+    let n_seed: usize = 100;
     let (hx, hz) = hgp_from_random(n_seed, 3, 6);
-    let n:usize = hx.cols();
-    let m:usize = hx.rows();
+    let n: usize = hx.cols();
+    let m: usize = hx.rows();
 
-    let css = CssCode::new(hx, hz)
-        .expect("CSS validity check failed.");
+    let css = CssCode::new(hx, hz).expect("CSS validity check failed.");
     let graphs = CssGraphs::new(&css);
 
     let tx = vec![0; n];
@@ -35,7 +34,7 @@ pub fn run() {
         p_error: 0.005,
         p_syn_flip: 0.0025,
     };
-        
+
     let z_channel = QuantumBscChannel {
         graph: &graphs.x, // Hx detects Z errors
         p_error: 0.005,
@@ -49,11 +48,11 @@ pub fn run() {
     dec_x.info();
 
     for _ in 0..runs {
-        match dec_x.apply_channel(&x_channel, &tx)  {
+        match dec_x.apply_channel(&x_channel, &tx) {
             Ok(_) => (),
             Err(e) => println!("X-Decoder Error: {}", e),
         }
-        match dec_z.apply_channel(&z_channel, &tx)  {
+        match dec_z.apply_channel(&z_channel, &tx) {
             Ok(_) => (),
             Err(e) => println!("Z-Decoder Error: {}", e),
         }
@@ -62,5 +61,5 @@ pub fn run() {
         println!("X-Decoder Result: {}", dec_x.result);
         dec_z.decode();
         println!("Z-Decoder Result: {}", dec_z.result);
-    } 
+    }
 }

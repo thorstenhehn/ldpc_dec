@@ -1,15 +1,15 @@
-use crate::mode::{Quantum};
-use crate::graph::Graph;
-use crate::channel::{QuantumBscChannel};
-use crate::random_ldpc::gen_ldpc;
+use crate::channel::QuantumBscChannel;
 use crate::decoder::Decoder;
+use crate::graph::Graph;
+use crate::mode::Quantum;
+use crate::random_ldpc::gen_ldpc;
 
 pub fn run() {
     // Create regular random code, set simulation parameters
     let runs = 100;
-    let n:usize  = 2000;
-    let dv:usize = 3;
-    let dc:usize = 6;
+    let n: usize = 2000;
+    let dv: usize = 3;
+    let dc: usize = 6;
     let h_csr = gen_ldpc(n, dv, dc);
 
     // qLDPC joint decoding: test with QuantumBSC channel

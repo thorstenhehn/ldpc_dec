@@ -1,23 +1,22 @@
+use crate::mode::{Classic, Mode, Quantum};
 use sprs::CsMat;
-use crate::mode::{Mode, Classic, Quantum};
 
 use std::marker::PhantomData;
 
 pub struct Graph<M: Mode> {
-    pub n_data:           usize, // Data vn length, classic + quantum: n
-    pub n_total:          usize, // Total vn length, classic: n, quantum: n+m
-    pub m:                usize,
-    pub n_edges:          usize,
-    pub cn_edges_data:    Vec<Vec<usize>>, // Connection to data VNs
-    pub cn_edges_total:   Vec<Vec<usize>>, // Connection to data + extended VNs
-    pub vn_edges:         Vec<Vec<usize>>,
-    pub cn_max_deg_data:  usize, // Degree of CNs to data VNs
+    pub n_data: usize,  // Data vn length, classic + quantum: n
+    pub n_total: usize, // Total vn length, classic: n, quantum: n+m
+    pub m: usize,
+    pub n_edges: usize,
+    pub cn_edges_data: Vec<Vec<usize>>,  // Connection to data VNs
+    pub cn_edges_total: Vec<Vec<usize>>, // Connection to data + extended VNs
+    pub vn_edges: Vec<Vec<usize>>,
+    pub cn_max_deg_data: usize,  // Degree of CNs to data VNs
     pub cn_max_deg_total: usize, // Degree of CNs to data + extended VNs
-    pub vn_max_deg:       usize,
-    pub edge_to_vn:       Vec<usize>,
-    _mode:                PhantomData<M>
+    pub vn_max_deg: usize,
+    pub edge_to_vn: Vec<usize>,
+    _mode: PhantomData<M>,
 }
-
 
 impl Graph<Classic> {
     pub fn new(h: CsMat<u8>) -> Self {
@@ -30,11 +29,9 @@ impl Graph<Classic> {
         let vn_edges;
         let edge_to_vn;
 
-        (cn_edges_data, cn_edges_total, vn_edges, edge_to_vn) =
-            build_classical_graph(&h);
+        (cn_edges_data, cn_edges_total, vn_edges, edge_to_vn) = build_classical_graph(&h);
 
-        let cn_max_deg_total =
-            cn_edges_total.iter().map(|c| c.len()).max().unwrap();
+        let cn_max_deg_total = cn_edges_total.iter().map(|c| c.len()).max().unwrap();
         let cn_max_deg_data = cn_max_deg_total; // No graph extension
 
         let vn_max_deg = vn_edges.iter().map(|v| v.len()).max().unwrap();
@@ -67,13 +64,10 @@ impl Graph<Quantum> {
         let vn_edges;
         let edge_to_vn;
 
-        (cn_edges_data, cn_edges_total, vn_edges, edge_to_vn) =
-            build_quantum_graph(&h);
+        (cn_edges_data, cn_edges_total, vn_edges, edge_to_vn) = build_quantum_graph(&h);
 
-        let cn_max_deg_data =
-            cn_edges_data.iter().map(|c| c.len()).max().unwrap();
-        let cn_max_deg_total =
-            cn_edges_total.iter().map(|c| c.len()).max().unwrap();
+        let cn_max_deg_data = cn_edges_data.iter().map(|c| c.len()).max().unwrap();
+        let cn_max_deg_total = cn_edges_total.iter().map(|c| c.len()).max().unwrap();
         let vn_max_deg = vn_edges.iter().map(|v| v.len()).max().unwrap();
 
         Self {
@@ -93,9 +87,14 @@ impl Graph<Quantum> {
     }
 }
 
-pub fn build_classical_graph(h_csr: &CsMat<u8>)
-                             -> (Vec<Vec<usize>>, Vec<Vec<usize>>, Vec<Vec<usize>>, Vec<usize>) {
-
+pub fn build_classical_graph(
+    h_csr: &CsMat<u8>,
+) -> (
+    Vec<Vec<usize>>,
+    Vec<Vec<usize>>,
+    Vec<Vec<usize>>,
+    Vec<usize>,
+) {
     let rows = h_csr.rows();
     let cols = h_csr.cols();
 
@@ -104,7 +103,7 @@ pub fn build_classical_graph(h_csr: &CsMat<u8>)
     let mut edge_to_vn = Vec::new();
 
     let binding = h_csr.indptr();
-    let indptr  = binding.as_slice().unwrap();
+    let indptr = binding.as_slice().unwrap();
     let indices = h_csr.indices();
 
     let mut edge_id = 0;
@@ -117,7 +116,7 @@ pub fn build_classical_graph(h_csr: &CsMat<u8>)
             vn_edges[col].push(edge_id);
 
             edge_to_vn.push(col);
-	        edge_id += 1;
+            edge_id += 1;
         }
     }
     let cn_edges_total = cn_edges_data.clone(); // No graph extension
@@ -125,19 +124,24 @@ pub fn build_classical_graph(h_csr: &CsMat<u8>)
     (cn_edges_data, cn_edges_total, vn_edges, edge_to_vn)
 }
 
-pub fn build_quantum_graph(h_csr: &CsMat<u8>)
-                           -> (Vec<Vec<usize>>, Vec<Vec<usize>>, Vec<Vec<usize>>, Vec<usize>) {
-
+pub fn build_quantum_graph(
+    h_csr: &CsMat<u8>,
+) -> (
+    Vec<Vec<usize>>,
+    Vec<Vec<usize>>,
+    Vec<Vec<usize>>,
+    Vec<usize>,
+) {
     let rows = h_csr.rows();
     let cols = h_csr.cols();
 
-    let mut cn_edges_data  = vec![Vec::new(); rows];
+    let mut cn_edges_data = vec![Vec::new(); rows];
     let mut cn_edges_total = vec![Vec::new(); rows];
     let mut vn_edges = vec![Vec::new(); cols + rows];
     let mut edge_to_vn = Vec::new();
 
     let binding = h_csr.indptr();
-    let indptr  = binding.as_slice().unwrap();
+    let indptr = binding.as_slice().unwrap();
     let indices = h_csr.indices();
 
     let mut edge_id = 0;

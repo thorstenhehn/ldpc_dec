@@ -1,9 +1,8 @@
-use sprs::{CsMat, TriMat};
-use rand::seq::SliceRandom;
 use rand::rng;
+use rand::seq::SliceRandom;
+use sprs::{CsMat, TriMat};
 
 pub fn gen_ldpc(n: usize, dv: usize, dc: usize) -> CsMat<u8> {
-
     assert!(n * dv % dc == 0);
 
     let m = n * dv / dc;

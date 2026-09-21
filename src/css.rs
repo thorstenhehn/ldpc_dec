@@ -1,6 +1,6 @@
-use sprs::{CsMat,TriMat};
 use crate::graph::Graph;
 use crate::mode::Quantum;
+use sprs::{CsMat, TriMat};
 
 pub struct CssCode {
     pub hx: CsMat<u8>,
@@ -10,7 +10,6 @@ pub struct CssCode {
 impl CssCode {
     // Constructor: check Hx * Hz^T = 0 (mod 2) and build CSS.
     pub fn new(hx: CsMat<u8>, hz: CsMat<u8>) -> Result<Self, String> {
-
         check_css(&hx, &hz)?;
 
         Ok(Self { hx, hz })
@@ -24,21 +23,15 @@ pub struct CssGraphs {
 
 impl CssGraphs {
     pub fn new(code: &CssCode) -> Self {
-
         let x = Graph::<Quantum>::new(code.hx.clone());
         let z = Graph::<Quantum>::new(code.hz.clone());
 
-        Self {
-            x,
-            z,
-        }
+        Self { x, z }
     }
 }
 
-
 // 3-qubit CSS code
 pub fn css_3qubit() -> (CsMat<u8>, CsMat<u8>) {
-
     let mut hx = TriMat::<u8>::new((2, 3));
 
     // row 0: 1 1 0
@@ -65,7 +58,6 @@ pub fn css_3qubit() -> (CsMat<u8>, CsMat<u8>) {
 }
 
 pub fn css_steane_code() -> (CsMat<u8>, CsMat<u8>) {
-
     let mut h = TriMat::<u8>::new((3, 7));
 
     // Row 0: 1 0 0 1 0 1 1
@@ -103,9 +95,7 @@ pub fn check_css(hx: &CsMat<u8>, hz: &CsMat<u8>) -> Result<(), String> {
     }
 
     for (ix, row_x) in hx.outer_iterator().enumerate() {
-
         for (iz, row_z) in hz.outer_iterator().enumerate() {
-
             let mut parity = 0u8;
 
             let mut px = 0;
@@ -115,16 +105,13 @@ pub fn check_css(hx: &CsMat<u8>, hz: &CsMat<u8>) -> Result<(), String> {
             let idx_z = row_z.indices();
 
             while px < idx_x.len() && pz < idx_z.len() {
-
                 if idx_x[px] == idx_z[pz] {
                     parity ^= 1;
                     px += 1;
                     pz += 1;
-                }
-                else if idx_x[px] < idx_z[pz] {
+                } else if idx_x[px] < idx_z[pz] {
                     px += 1;
-                }
-                else {
+                } else {
                     pz += 1;
                 }
             }
@@ -132,7 +119,9 @@ pub fn check_css(hx: &CsMat<u8>, hz: &CsMat<u8>) -> Result<(), String> {
             if parity != 0 {
                 return Err(format!(
                     "CSS condition violated:\
-                     row {} of Hx and row {} of Hz anticommute", ix, iz));
+                     row {} of Hx and row {} of Hz anticommute",
+                    ix, iz
+                ));
             }
         }
     }
